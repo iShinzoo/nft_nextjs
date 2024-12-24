@@ -1,7 +1,7 @@
 import Head from "next/head";
 import { useState } from "react";
-import Web3 from "web3";
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from "@/utils/contract";
+import { ethers } from "ethers";
 
 export default function Home() {
   const [address, setAddress] = useState(null);
@@ -19,10 +19,11 @@ export default function Home() {
           console.log(accounts);
           setAddress(accounts[0]);
 
-          const web3 = new Web3(ethereum);
-          const contractInstance = new web3.eth.Contract(
+          const provider = new ethers.providers.Web3Provider(ethereum);
+          const contractInstance = new ethers.Contract(
             CONTRACT_ABI,
-            CONTRACT_ADDRESS
+            CONTRACT_ADDRESS,
+            signer
           );
           setContract(contractInstance);
         } catch (error) {
@@ -39,19 +40,15 @@ export default function Home() {
   console.log("LOADING ", loading)
 
   const mintNFT = async () => {
-    if (!Contract) {
-      console.error("Contract not initialized!");
-      return;
-    }
-
-    setLoading(true); // Start loading
     try {
-      const mint = await Contract.methods.safeMint(address).send({ from: address });
-      console.log("Minted NFT: ", mint);
+      setLoading(true);
+      const mint = await contract.safeMint();
+      await mint.wait();
+      console.log("Minted NFT : ", mint);
+      setLoading(false);
     } catch (error) {
-      console.error("Error minting NFT: ", error);
-    } finally {
-      setLoading(false); // Stop loading
+      console.log("Error minting NFT: ", error);
+      setLoading(false);
     }
   };
 
